@@ -54,6 +54,7 @@ namespace MakerBlendShapeSync
             }
 
             _windowRect = GUILayout.Window(_windowId, _windowRect, DrawWindow, "Maker Blend Shapes");
+            BlendShapeUtilities.EatInputInRect(_windowRect);
         }
 
         private void RefreshCharacter()
@@ -108,10 +109,11 @@ namespace MakerBlendShapeSync
             foreach (var renderer in _renderers)
             {
                 string path = BlendShapeUtilities.GetRelativePath(_chaCtrl.transform, renderer.transform);
-                if (!Matches(path, _rendererSearch) && !Matches(renderer.name, _rendererSearch))
+                string displayName = BlendShapeUtilities.GetDisplayName(_chaCtrl.transform, renderer);
+                if (!Matches(path, _rendererSearch) && !Matches(renderer.name, _rendererSearch) && !Matches(displayName, _rendererSearch))
                     continue;
 
-                string label = string.IsNullOrEmpty(path) ? renderer.name : path;
+                string label = displayName;
                 label += $" ({renderer.sharedMesh.blendShapeCount})";
                 var style = renderer == _selectedRenderer ? _selectedStyle : GUI.skin.button;
                 if (GUILayout.Button(label, style, GUILayout.ExpandWidth(true)))
@@ -125,7 +127,7 @@ namespace MakerBlendShapeSync
         private void DrawShapePanel()
         {
             GUILayout.BeginVertical(GUI.skin.box, GUILayout.ExpandHeight(true));
-            GUILayout.Label(_selectedRenderer == null ? "Blend Shapes" : _selectedRenderer.name);
+            GUILayout.Label(_selectedRenderer == null ? "Blend Shapes" : BlendShapeUtilities.GetDisplayName(_chaCtrl.transform, _selectedRenderer));
             _shapeSearch = GUILayout.TextField(_shapeSearch);
 
             if (_selectedRenderer == null || _selectedRenderer.sharedMesh == null)

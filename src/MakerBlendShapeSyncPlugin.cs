@@ -12,7 +12,7 @@ namespace MakerBlendShapeSync
 {
     [BepInPlugin(GUID, Name, Version)]
     [BepInDependency("marco.kkapi", "1.35")]
-    [BepInDependency("com.bepis.bepinex.extendedsave", "21.1.2")]
+    [BepInDependency("com.bepis.bepinex.extendedsave")]
     [BepInDependency("com.joan6694.kkplugins.kkpe", BepInDependency.DependencyFlags.SoftDependency)]
     public sealed class MakerBlendShapeSyncPlugin : BaseUnityPlugin
     {
