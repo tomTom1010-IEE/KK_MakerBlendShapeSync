@@ -41,10 +41,6 @@
       <HintPath>dlls\ExtensibleSaveFormat.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="MessagePack">
-      <HintPath>dlls\MessagePack.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
     <Reference Include="KKPE">
       <HintPath>dlls\KKPE.dll</HintPath>
       <Private>false</Private>
