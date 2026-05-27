@@ -1,2 +1,2 @@
-# KKS_MakerBlendShapeSync
+# KK_MakerBlendShapeSync
 A plugin that enables BlendShape edit in maker and is compatible with KKPE
