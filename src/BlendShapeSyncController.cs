@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using ExtensibleSaveFormat;
 using KKAPI;
@@ -21,7 +22,10 @@ namespace MakerBlendShapeSync
         protected override void OnReload(GameMode currentGameMode, bool maintainState)
         {
             if (!maintainState)
+            {
                 LoadFromExtendedData();
+                StartCoroutine(DelayedApply());
+            }
             base.OnReload(currentGameMode, maintainState);
         }
 
@@ -32,8 +36,15 @@ namespace MakerBlendShapeSync
 
         protected override void OnCoordinateBeingLoaded(ChaFileCoordinate coordinate)
         {
-            ApplyCurrentCoordinate();
+            StartCoroutine(DelayedApply());
             base.OnCoordinateBeingLoaded(coordinate);
+        }
+
+        private IEnumerator DelayedApply()
+        {
+            yield return null;
+            yield return null;
+            ApplyCurrentCoordinate();
         }
 
         internal void UpsertRecord(BlendShapeRecord record)
@@ -60,6 +71,7 @@ namespace MakerBlendShapeSync
 
         internal void ApplyCurrentCoordinate()
         {
+            MakerBlendShapeSyncPlugin.Log?.LogDebug($"Applying {Records.Count} blendshape record(s) for {ChaControl?.name}");
             foreach (var record in Records.Where(x => x.Coordinate == -1 || x.Coordinate == CurrentCoordinateIndex))
                 TryApply(record);
         }
@@ -67,9 +79,19 @@ namespace MakerBlendShapeSync
         private void TryApply(BlendShapeRecord record)
         {
             var renderer = BlendShapeUtilities.FindRenderer(ChaControl.transform, record);
-            if (renderer == null || renderer.sharedMesh == null) return;
+            if (renderer == null || renderer.sharedMesh == null)
+            {
+                MakerBlendShapeSyncPlugin.Log?.LogDebug($"Renderer not found for blendshape {record.RendererPath} / {record.RendererName}");
+                return;
+            }
+
             int index = BlendShapeUtilities.FindBlendShapeIndex(renderer, record.ShapeName);
-            if (index < 0) return;
+            if (index < 0)
+            {
+                MakerBlendShapeSyncPlugin.Log?.LogDebug($"Blendshape not found: {record.ShapeName} on {renderer.name}");
+                return;
+            }
+
             renderer.SetBlendShapeWeight(index, record.Weight);
         }
 
@@ -78,10 +100,16 @@ namespace MakerBlendShapeSync
             Records.Clear();
             var data = ExtendedSave.GetExtendedDataById(LoadedChaFile, MakerBlendShapeSyncPlugin.ExtDataKey);
             var bytes = data?.data != null && data.data.TryGetValue("BlendShapeSyncData", out var value) ? value as byte[] : null;
-            if (bytes == null) return;
+            if (bytes == null)
+            {
+                MakerBlendShapeSyncPlugin.Log?.LogDebug("No MakerBlendShapeSync ExtendedData found.");
+                return;
+            }
+
             var unpacked = MessagePackSerializer.Deserialize<BlendShapeSyncData>(bytes);
             if (unpacked?.Records != null)
                 Records.AddRange(unpacked.Records);
+            MakerBlendShapeSyncPlugin.Log?.LogDebug($"Loaded {Records.Count} blendshape record(s) from ExtendedData.");
         }
 
         private void SaveToExtendedData()
