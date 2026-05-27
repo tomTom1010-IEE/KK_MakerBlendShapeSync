@@ -1,0 +1,17 @@
+﻿# Build output
+bin/
+obj/
+
+# Dependencies copied from game/plugin install; not redistributable
+dlls/
+
+# IDE
+.vs/
+*.user
+*.suo
+*.csproj.user
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
