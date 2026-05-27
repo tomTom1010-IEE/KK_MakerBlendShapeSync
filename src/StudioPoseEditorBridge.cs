@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace MakerBlendShapeSync
 {
-    internal static class StudioKkspeBridge
+    internal static class StudioPoseEditorBridge
     {
         internal static void Init(Harmony harmony)
         {
@@ -15,11 +15,11 @@ namespace MakerBlendShapeSync
             if (loadClothes != null)
             {
                 harmony.Patch(loadClothes,
-                    postfix: new HarmonyMethod(typeof(StudioKkspeBridge), nameof(OCIChar_LoadClothesFile_Postfix)));
+                    postfix: new HarmonyMethod(typeof(StudioPoseEditorBridge), nameof(OCIChar_LoadClothesFile_Postfix)));
             }
             else
             {
-                MakerBlendShapeSyncPlugin.Log?.LogWarning("Could not patch OCIChar.LoadClothesFile; KKSPE bridge clothing refresh is disabled.");
+                MakerBlendShapeSyncPlugin.Log?.LogWarning("Could not patch OCIChar.LoadClothesFile; PoseEditor bridge clothing refresh is disabled.");
             }
 
             var setCoordinate = AccessTools.Method(typeof(OCIChar), "SetCoordinateInfo",
@@ -27,38 +27,38 @@ namespace MakerBlendShapeSync
             if (setCoordinate != null)
             {
                 harmony.Patch(setCoordinate,
-                    postfix: new HarmonyMethod(typeof(StudioKkspeBridge), nameof(OCIChar_SetCoordinateInfo_Postfix)));
+                    postfix: new HarmonyMethod(typeof(StudioPoseEditorBridge), nameof(OCIChar_SetCoordinateInfo_Postfix)));
             }
         }
 
         private static void OCIChar_LoadClothesFile_Postfix(OCIChar __instance)
         {
-            ApplyAndRefreshKkspe(__instance);
+            ApplyAndRefreshPoseEditor(__instance);
         }
 
         private static void OCIChar_SetCoordinateInfo_Postfix(OCIChar __instance)
         {
-            ApplyAndRefreshKkspe(__instance);
+            ApplyAndRefreshPoseEditor(__instance);
         }
 
-        internal static void ApplyAndRefreshKkspe(OCIChar ociChar)
+        internal static void ApplyAndRefreshPoseEditor(OCIChar ociChar)
         {
             var ctrl = ociChar?.charInfo?.gameObject.GetComponent<BlendShapeSyncController>();
             if (ctrl == null) return;
             ctrl.ApplyCurrentCoordinate();
-            TryRefreshKkspeBlendShapes(ociChar);
+            TryRefreshPoseEditorBlendShapes(ociChar);
         }
 
-        private static void TryRefreshKkspeBlendShapes(OCIChar ociChar)
+        private static void TryRefreshPoseEditorBlendShapes(OCIChar ociChar)
         {
             if (!StudioAPI.InsideStudio || ociChar == null) return;
 
             try
             {
-                var poseController = FindKkspePoseController(ociChar);
+                var poseController = FindPoseEditorController(ociChar);
                 if (poseController == null)
                 {
-                    MakerBlendShapeSyncPlugin.Log?.LogDebug("KKSPE PoseController was not found for OCIChar.");
+                    MakerBlendShapeSyncPlugin.Log?.LogDebug("PoseEditor PoseController was not found for OCIChar.");
                     return;
                 }
 
@@ -70,15 +70,15 @@ namespace MakerBlendShapeSync
                 var editorType = editor.GetType();
                 editorType.GetMethod("RefreshSkinnedMeshRendererList", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)?.Invoke(editor, null);
                 editorType.GetMethod("ApplyBlendShapeWeights", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)?.Invoke(editor, null);
-                MakerBlendShapeSyncPlugin.Log?.LogDebug("Refreshed KKSPE BlendShapesEditor.");
+                MakerBlendShapeSyncPlugin.Log?.LogDebug("Refreshed PoseEditor BlendShapesEditor.");
             }
             catch (Exception ex)
             {
-                MakerBlendShapeSyncPlugin.Log?.LogDebug($"KKSPE bridge refresh failed: {ex.Message}");
+                MakerBlendShapeSyncPlugin.Log?.LogDebug($"PoseEditor bridge refresh failed: {ex.Message}");
             }
         }
 
-        private static object FindKkspePoseController(OCIChar ociChar)
+        private static object FindPoseEditorController(OCIChar ociChar)
         {
             var poseControllerType = Type.GetType("HSPE.PoseController, KKSPE");
             if (poseControllerType == null) return null;
@@ -100,3 +100,5 @@ namespace MakerBlendShapeSync
         }
     }
 }
+
+

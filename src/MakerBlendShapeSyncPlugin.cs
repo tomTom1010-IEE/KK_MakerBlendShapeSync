@@ -16,7 +16,7 @@ namespace MakerBlendShapeSync
     [BepInDependency("com.joan6694.kkplugins.kkpe", BepInDependency.DependencyFlags.SoftDependency)]
     public sealed class MakerBlendShapeSyncPlugin : BaseUnityPlugin
     {
-        public const string GUID = "madevil.kks.MakerBlendShapeSync";
+        public const string GUID = "tomtom.kks.makerblendshapesync";
         public const string Name = "MakerBlendShapeSync";
         public const string Version = "0.1.0.0";
 
@@ -49,7 +49,7 @@ namespace MakerBlendShapeSync
                 return;
 
             _harmony = new Harmony(GUID);
-            StudioKkspeBridge.Init(_harmony);
+            StudioPoseEditorBridge.Init(_harmony);
         }
 
         private void InitMakerUi()
@@ -75,4 +75,5 @@ namespace MakerBlendShapeSync
         }
     }
 }
+
 
