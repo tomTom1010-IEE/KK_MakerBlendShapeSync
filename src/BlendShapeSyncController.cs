@@ -13,6 +13,10 @@ namespace MakerBlendShapeSync
     {
         internal readonly List<BlendShapeRecord> Records = new List<BlendShapeRecord>();
         public int CurrentCoordinateIndex => ChaControl.fileStatus.coordinateType;
+        private ChaFile LoadedChaFile =>
+            MakerAPI.InsideMaker && MakerAPI.LastLoadedChaFile != null
+                ? MakerAPI.LastLoadedChaFile
+                : ChaControl.chaFile;
 
         protected override void OnReload(GameMode currentGameMode, bool maintainState)
         {
@@ -40,6 +44,20 @@ namespace MakerBlendShapeSync
             Records.Add(record);
         }
 
+        internal void RemoveRecord(int coordinate, string rendererPath, string shapeName)
+        {
+            Records.RemoveAll(x => x.Coordinate == coordinate &&
+                                   x.RendererPath == rendererPath &&
+                                   x.ShapeName == shapeName);
+        }
+
+        internal BlendShapeRecord GetRecord(int coordinate, string rendererPath, string shapeName)
+        {
+            return Records.FirstOrDefault(x => x.Coordinate == coordinate &&
+                                               x.RendererPath == rendererPath &&
+                                               x.ShapeName == shapeName);
+        }
+
         internal void ApplyCurrentCoordinate()
         {
             foreach (var record in Records.Where(x => x.Coordinate == -1 || x.Coordinate == CurrentCoordinateIndex))
@@ -58,7 +76,7 @@ namespace MakerBlendShapeSync
         private void LoadFromExtendedData()
         {
             Records.Clear();
-            var data = ExtendedSave.GetExtendedDataById(ChaControl.chaFile, MakerBlendShapeSyncPlugin.ExtDataKey);
+            var data = ExtendedSave.GetExtendedDataById(LoadedChaFile, MakerBlendShapeSyncPlugin.ExtDataKey);
             var bytes = data?.data != null && data.data.TryGetValue("BlendShapeSyncData", out var value) ? value as byte[] : null;
             if (bytes == null) return;
             var unpacked = MessagePackSerializer.Deserialize<BlendShapeSyncData>(bytes);

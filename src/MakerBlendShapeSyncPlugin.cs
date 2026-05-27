@@ -2,6 +2,9 @@
 using BepInEx.Logging;
 using HarmonyLib;
 using KKAPI.Chara;
+using KKAPI.Maker;
+using KKAPI.Maker.UI.Sidebar;
+using UniRx;
 using UnityEngine;
 
 namespace MakerBlendShapeSync
@@ -18,6 +21,8 @@ namespace MakerBlendShapeSync
 
         internal const string ExtDataKey = "MakerBlendShapeSync";
         internal static ManualLogSource Log;
+        internal static MakerBlendShapeWindow MakerWindow;
+        internal static SidebarToggle MakerSidebarToggle;
         private Harmony _harmony;
 
         private void Awake()
@@ -29,11 +34,34 @@ namespace MakerBlendShapeSync
         {
             _harmony = Harmony.CreateAndPatchAll(typeof(StudioKkspeBridge), GUID);
             CharacterApi.RegisterExtraBehaviour<BlendShapeSyncController>(ExtDataKey);
+            InitMakerUi();
         }
 
         private void OnDestroy()
         {
             _harmony?.UnpatchSelf();
+        }
+
+        private void InitMakerUi()
+        {
+            MakerAPI.RegisterCustomSubCategories += (sender, args) =>
+            {
+                MakerWindow = gameObject.AddComponent<MakerBlendShapeWindow>();
+                MakerSidebarToggle = args.AddSidebarControl(new SidebarToggle("BlendShapes", false, this));
+                MakerSidebarToggle.ValueChanged.Subscribe(value =>
+                {
+                    if (MakerWindow != null)
+                        MakerWindow.enabled = value;
+                });
+            };
+
+            MakerAPI.MakerExiting += (sender, args) =>
+            {
+                if (MakerWindow != null)
+                    Destroy(MakerWindow);
+                MakerWindow = null;
+                MakerSidebarToggle = null;
+            };
         }
     }
 }
