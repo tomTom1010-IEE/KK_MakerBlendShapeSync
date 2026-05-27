@@ -4,6 +4,7 @@ using HarmonyLib;
 using KKAPI.Chara;
 using KKAPI.Maker;
 using KKAPI.Maker.UI.Sidebar;
+using KKAPI.Studio;
 using UniRx;
 using UnityEngine;
 
@@ -32,14 +33,23 @@ namespace MakerBlendShapeSync
 
         private void Start()
         {
-            _harmony = Harmony.CreateAndPatchAll(typeof(StudioKkspeBridge), GUID);
             CharacterApi.RegisterExtraBehaviour<BlendShapeSyncController>(ExtDataKey);
             InitMakerUi();
+            InitStudioBridge();
         }
 
         private void OnDestroy()
         {
             _harmony?.UnpatchSelf();
+        }
+
+        private void InitStudioBridge()
+        {
+            if (!StudioAPI.InsideStudio)
+                return;
+
+            _harmony = new Harmony(GUID);
+            StudioKkspeBridge.Init(_harmony);
         }
 
         private void InitMakerUi()
@@ -65,3 +75,4 @@ namespace MakerBlendShapeSync
         }
     }
 }
+

@@ -9,9 +9,34 @@ namespace MakerBlendShapeSync
 {
     internal static class StudioKkspeBridge
     {
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(OCIChar), "OnLoadClothesFile")]
-        private static void OCIChar_OnLoadClothesFile_Postfix(OCIChar __instance)
+        internal static void Init(Harmony harmony)
+        {
+            var loadClothes = AccessTools.Method(typeof(OCIChar), "LoadClothesFile", new[] { typeof(string) });
+            if (loadClothes != null)
+            {
+                harmony.Patch(loadClothes,
+                    postfix: new HarmonyMethod(typeof(StudioKkspeBridge), nameof(OCIChar_LoadClothesFile_Postfix)));
+            }
+            else
+            {
+                MakerBlendShapeSyncPlugin.Log?.LogWarning("Could not patch OCIChar.LoadClothesFile; KKSPE bridge clothing refresh is disabled.");
+            }
+
+            var setCoordinate = AccessTools.Method(typeof(OCIChar), "SetCoordinateInfo",
+                new[] { typeof(ChaFileDefine.CoordinateType), typeof(bool) });
+            if (setCoordinate != null)
+            {
+                harmony.Patch(setCoordinate,
+                    postfix: new HarmonyMethod(typeof(StudioKkspeBridge), nameof(OCIChar_SetCoordinateInfo_Postfix)));
+            }
+        }
+
+        private static void OCIChar_LoadClothesFile_Postfix(OCIChar __instance)
+        {
+            ApplyAndRefreshKkspe(__instance);
+        }
+
+        private static void OCIChar_SetCoordinateInfo_Postfix(OCIChar __instance)
         {
             ApplyAndRefreshKkspe(__instance);
         }
@@ -53,3 +78,4 @@ namespace MakerBlendShapeSync
         }
     }
 }
+
